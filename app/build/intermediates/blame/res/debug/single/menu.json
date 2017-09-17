@@ -2,5 +2,9 @@
     {
         "merged": "C:\\Users\\Alex\\AndroidStudioProjects\\Gatherer\\app\\build\\intermediates\\res\\merged\\debug\\menu\\menu_main.xml",
         "source": "C:\\Users\\Alex\\AndroidStudioProjects\\Gatherer\\app\\src\\main\\res\\menu\\menu_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\Owner\\depression-mqp\\app\\build\\intermediates\\res\\merged\\debug\\menu\\menu_main.xml",
+        "source": "C:\\Users\\Owner\\depression-mqp\\app\\src\\main\\res\\menu\\menu_main.xml"
     }
 ]

